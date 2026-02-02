@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: b4a-postgres
+    environment:
+      POSTGRES_DB: b4a
+      POSTGRES_USER: b4a
+      POSTGRES_PASSWORD: b4a
+    ports:
+      - "5432:5432"
+    volumes:
+      - b4a_pgdata:/var/lib/postgresql/data
+
+volumes:
+  b4a_pgdata:
