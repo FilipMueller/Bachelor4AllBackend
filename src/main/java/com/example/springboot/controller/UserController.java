@@ -1,12 +1,13 @@
 package com.example.springboot.controller;
 
+import com.example.springboot.models.UserRole;
 import com.example.springboot.repository.User;
 import com.example.springboot.service.UserService;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
+@CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/users")
 public class UserController {
@@ -20,8 +21,15 @@ public class UserController {
     @PostMapping
     public User createUser(
             @RequestParam String name,
-            @RequestParam String password
+            @RequestParam String password,
+            @RequestParam String email,
+            @RequestParam UserRole role
     ) {
-        return service.createUser(name, password);
+        return service.createUser(name, password, email, role);
+    }
+
+    @GetMapping
+    public List<User> getAllUsers() {
+        return service.getAllUsers();
     }
 }

@@ -26,6 +26,12 @@ public class Diploma {
     @Column(nullable = false)
     private String institution;
 
+    @Column(nullable = false)
+    private String title;
+
+    @Column(nullable = false)
+    private String publicationYear;
+
     @Column(name = "pdf_path", nullable = false)
     private String pdfPath;
 
@@ -43,12 +49,16 @@ public class Diploma {
             String transactionHash,
             String studentAddress,
             String institution,
+            String title,
+            String publicationYear,
             String pdfPath
     ) {
         this.onChainId = onChainId;
         this.transactionHash = transactionHash;
         this.studentAddress = studentAddress;
         this.institution = institution;
+        this.title = title;
+        this.publicationYear = publicationYear;
         this.pdfPath = pdfPath;
     }
 
