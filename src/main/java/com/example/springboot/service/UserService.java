@@ -40,8 +40,23 @@ public class UserService {
         return repository.save(user);
     }
 
-    // ✅ GET ALL USERS
     public List<User> getAllUsers() {
         return repository.findAll();
+    }
+
+    public UserRole getUserRole(String email, String password) {
+        User user = repository
+                .findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!user.getPassword().equals(password)) {
+            throw new RuntimeException("Invalid password");
+        }
+
+        return user.getRole();
+    }
+
+    public void deleteUser(String email) {
+        repository.delete(repository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found")));
     }
 }

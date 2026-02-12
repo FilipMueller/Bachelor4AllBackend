@@ -43,7 +43,6 @@ public class DiplomaDTOService {
 
     public List<DiplomaViewDTO> getDiplomasForStudent(String studentName) {
 
-        // 1) Resolve user → wallet address
         User student = userRepository.findByName(studentName)
                 .orElseThrow(() ->
                         new IllegalStateException("User not found: " + studentName)
@@ -51,11 +50,9 @@ public class DiplomaDTOService {
 
         String walletAddress = student.getWalletAddress();
 
-        // 2) Fetch diplomas by student address
         List<Diploma> diplomas =
                 diplomaRepository.findAllByStudentAddress(walletAddress);
 
-        // 3) Map to DTOs
         return diplomas.stream()
                 .map(d -> new DiplomaViewDTO(
                         d.getOnChainId(),
