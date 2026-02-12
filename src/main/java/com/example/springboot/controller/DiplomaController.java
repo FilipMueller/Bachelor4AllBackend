@@ -33,10 +33,10 @@ public class DiplomaController {
 
     @PostMapping("/verify")
     public boolean verifyDiploma(
-            @RequestParam("onChainId") BigInteger onChainId,
+            @RequestParam("userEmail") String userEmail,
             @RequestParam("file") MultipartFile pdf
     ) throws Exception {
-        return service.verifyDiploma(onChainId, pdf);
+        return service.verifyDiplomaForStudent(userEmail, pdf);
     }
 
     @GetMapping("/all")

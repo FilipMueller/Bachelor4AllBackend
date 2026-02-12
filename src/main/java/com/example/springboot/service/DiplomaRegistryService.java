@@ -1,5 +1,7 @@
 package com.example.springboot.service;
 
+import com.example.springboot.repository.User;
+import com.example.springboot.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import com.example.springboot.repository.Diploma;
 import com.example.springboot.repository.DiplomaRepository;
@@ -22,6 +24,7 @@ public class DiplomaRegistryService {
 
     private final DiplomaRegistry contract;
     private final DiplomaRepository diplomaRepository;
+    private final UserRepository userRepository;
     private final Path storageDirectory;
 
     public DiplomaRegistryService(
@@ -29,44 +32,40 @@ public class DiplomaRegistryService {
             Credentials credentials,
             @Value("${chain.contract-address}") String contractAddress,
             DiplomaRepository diplomaRepository,
-            @Value("${diploma.storage-directory}") String storageDirectory
+            @Value("${diploma.storage-directory}") String storageDirectory,
+            UserRepository userRepository
     ) {
         this.contract = DiplomaRegistry.load(contractAddress, web3j, credentials, new DefaultGasProvider());
         this.diplomaRepository = diplomaRepository;
         this.storageDirectory = Paths.get(storageDirectory);
+        this.userRepository = userRepository;
     }
 
     public BigInteger issueDiploma(String student, String institution, String title, String publicationYear, MultipartFile pdf) throws Exception {
 
-        // 1) Hash PDF
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
         byte[] hash = digest.digest(pdf.getBytes());
 
-        // 2) Issue on-chain
         TransactionReceipt receipt = contract.issueDiploma(student, hash, institution).send();
         List<DiplomaRegistry.DiplomaIssuedEventResponse> events = contract.getDiplomaIssuedEvents(receipt);
 
         BigInteger onChainId = events.getFirst().id;
 
-        // 3) Save PDF to disk using onChainId as filename
         Files.createDirectories(storageDirectory);
 
         String fileName = onChainId + ".pdf";
         Path target = storageDirectory.resolve(fileName).normalize();
 
-        // security guard: ensure path stays inside storageDir
         if (!target.startsWith(storageDirectory.normalize())) {
             throw new SecurityException("Invalid target path: " + target);
         }
 
-        // overwrite if exists (prototype behavior)
         try (InputStream in = pdf.getInputStream()) {
             Files.copy(in, target, StandardCopyOption.REPLACE_EXISTING);
         }
 
-        String pdfPath = target.toString();
+        String pdfPath = "/diplomas/" + fileName;
 
-        // 4) Persist metadata
         Diploma diploma = new Diploma(
                 onChainId.longValue(),
                 receipt.getTransactionHash(),
@@ -82,10 +81,28 @@ public class DiplomaRegistryService {
         return onChainId;
     }
 
-    public boolean verifyDiploma(BigInteger onChainId, MultipartFile pdf) throws Exception {
+    public boolean verifyDiplomaForStudent(String email, MultipartFile pdf) throws Exception {
+
+        User user = userRepository
+                .findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
         byte[] computedHash = digest.digest(pdf.getBytes());
 
-        return contract.verifyDiploma(onChainId, computedHash).send();
+        List<Diploma> diplomas = diplomaRepository.findAllByStudentAddress(user.getWalletAddress());
+
+        for (Diploma diploma : diplomas) {
+
+            BigInteger id = BigInteger.valueOf(diploma.getOnChainId());
+
+            boolean isValid = contract.verifyDiploma(id, computedHash).send();
+
+            if (isValid) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
