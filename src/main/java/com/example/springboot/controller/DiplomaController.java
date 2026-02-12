@@ -48,4 +48,9 @@ public class DiplomaController {
     public List<DiplomaViewDTO> getDiplomasForStudent(@RequestParam String name) {
         return diplomaDTOService.getDiplomasForStudent(name);
     }
+
+    @PostMapping("/revoke")
+    public void revokeDiploma(@RequestParam Long onChainId) throws Exception {
+        service.revokeDiploma(onChainId);
+    }
 }

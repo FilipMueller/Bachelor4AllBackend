@@ -73,6 +73,7 @@ public class DiplomaRegistryService {
                 institution,
                 title,
                 publicationYear,
+                false,
                 pdfPath
         );
 
@@ -104,5 +105,26 @@ public class DiplomaRegistryService {
         }
 
         return false;
+    }
+
+    public void revokeDiploma(Long onChainId) throws Exception {
+
+        BigInteger id = BigInteger.valueOf(onChainId);
+
+        TransactionReceipt receipt = contract.revokeDiploma(id).send();
+
+        List<DiplomaRegistry.DiplomaRevokedEventResponse> events =
+                contract.getDiplomaRevokedEvents(receipt);
+
+        if (events.isEmpty()) {
+            throw new RuntimeException("Revocation failed");
+        }
+
+        Diploma diploma = diplomaRepository
+                .findByOnChainId(onChainId)
+                .orElseThrow(() -> new RuntimeException("Diploma not found"));
+
+        diploma.setRevoked(true);
+        diplomaRepository.save(diploma);
     }
 }

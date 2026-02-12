@@ -10,6 +10,7 @@ public class DiplomaViewDTO {
     private String studentName;
     private String title;
     private String publicationYear;
+    private Boolean revoked;
     private String pdfPath;
 
     public DiplomaViewDTO(
@@ -18,6 +19,7 @@ public class DiplomaViewDTO {
             String studentName,
             String title,
             String publicationYear,
+            Boolean revoked,
             String pdfPath
     ) {
         this.onChainId = onChainId;
@@ -25,6 +27,7 @@ public class DiplomaViewDTO {
         this.studentName = studentName;
         this.title = title;
         this.publicationYear = publicationYear;
+        this.revoked = revoked;
         this.pdfPath = pdfPath;
     }
 }

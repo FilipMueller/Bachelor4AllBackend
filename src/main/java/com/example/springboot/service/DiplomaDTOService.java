@@ -36,6 +36,7 @@ public class DiplomaDTOService {
                     student.getName(),
                     "",
                     "",
+                    diploma.getRevoked(),
                     diploma.getPdfPath()
             );
         }).toList();
@@ -54,13 +55,14 @@ public class DiplomaDTOService {
                 diplomaRepository.findAllByStudentAddress(walletAddress);
 
         return diplomas.stream()
-                .map(d -> new DiplomaViewDTO(
-                        d.getOnChainId(),
-                        d.getInstitution(),
+                .map(diploma -> new DiplomaViewDTO(
+                        diploma.getOnChainId(),
+                        diploma.getInstitution(),
                         student.getName(),
-                        d.getTitle(),
-                        d.getPublicationYear(),
-                        d.getPdfPath()
+                        diploma.getTitle(),
+                        diploma.getPublicationYear(),
+                        diploma.getRevoked(),
+                        diploma.getPdfPath()
                 ))
                 .toList();
     }

@@ -1,11 +1,11 @@
 package com.example.springboot.repository;
 
 import jakarta.persistence.*;
-import lombok.Getter;
+import lombok.Data;
 
 import java.time.LocalDateTime;
 
-@Getter
+@Data
 @Entity
 @Table(name = "diplomas")
 public class Diploma {
@@ -32,6 +32,9 @@ public class Diploma {
     @Column(nullable = false)
     private String publicationYear;
 
+    @Column(nullable = false)
+    private Boolean revoked;
+
     @Column(name = "pdf_path", nullable = false)
     private String pdfPath;
 
@@ -51,6 +54,7 @@ public class Diploma {
             String institution,
             String title,
             String publicationYear,
+            Boolean revoked,
             String pdfPath
     ) {
         this.onChainId = onChainId;
@@ -59,9 +63,8 @@ public class Diploma {
         this.institution = institution;
         this.title = title;
         this.publicationYear = publicationYear;
+        this.revoked = revoked;
         this.pdfPath = pdfPath;
     }
-
-    /* ===== Getters ===== */
 
 }

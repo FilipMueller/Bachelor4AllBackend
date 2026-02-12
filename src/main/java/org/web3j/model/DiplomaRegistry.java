@@ -27,7 +27,7 @@ import org.web3j.protocol.core.methods.request.EthFilter;
 import org.web3j.protocol.core.methods.response.BaseEventResponse;
 import org.web3j.protocol.core.methods.response.Log;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
-import org.web3j.tuples.generated.Tuple5;
+import org.web3j.tuples.generated.Tuple6;
 import org.web3j.tx.Contract;
 import org.web3j.tx.TransactionManager;
 import org.web3j.tx.gas.ContractGasProvider;
@@ -55,10 +55,16 @@ public class DiplomaRegistry extends Contract {
 
     public static final String FUNC_NEXTID = "nextId";
 
+    public static final String FUNC_REVOKEDIPLOMA = "revokeDiploma";
+
     public static final String FUNC_VERIFYDIPLOMA = "verifyDiploma";
 
     public static final Event DIPLOMAISSUED_EVENT = new Event("DiplomaIssued", 
             Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>(true) {}, new TypeReference<Address>(true) {}, new TypeReference<Bytes32>() {}));
+    ;
+
+    public static final Event DIPLOMAREVOKED_EVENT = new Event("DiplomaRevoked", 
+            Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>(true) {}));
     ;
 
     @Deprecated
@@ -83,23 +89,24 @@ public class DiplomaRegistry extends Contract {
         super(BINARY, contractAddress, web3j, transactionManager, contractGasProvider);
     }
 
-    public RemoteFunctionCall<Tuple5<BigInteger, String, byte[], BigInteger, String>> diplomas(
+    public RemoteFunctionCall<Tuple6<BigInteger, String, byte[], BigInteger, String, Boolean>> diplomas(
             BigInteger param0) {
         final Function function = new Function(FUNC_DIPLOMAS, 
                 Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Uint256(param0)), 
-                Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {}, new TypeReference<Address>() {}, new TypeReference<Bytes32>() {}, new TypeReference<Uint256>() {}, new TypeReference<Utf8String>() {}));
-        return new RemoteFunctionCall<Tuple5<BigInteger, String, byte[], BigInteger, String>>(function,
-                new Callable<Tuple5<BigInteger, String, byte[], BigInteger, String>>() {
+                Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {}, new TypeReference<Address>() {}, new TypeReference<Bytes32>() {}, new TypeReference<Uint256>() {}, new TypeReference<Utf8String>() {}, new TypeReference<Bool>() {}));
+        return new RemoteFunctionCall<Tuple6<BigInteger, String, byte[], BigInteger, String, Boolean>>(function,
+                new Callable<Tuple6<BigInteger, String, byte[], BigInteger, String, Boolean>>() {
                     @Override
-                    public Tuple5<BigInteger, String, byte[], BigInteger, String> call() throws
-                            Exception {
+                    public Tuple6<BigInteger, String, byte[], BigInteger, String, Boolean> call()
+                            throws Exception {
                         List<Type> results = executeCallMultipleValueReturn(function);
-                        return new Tuple5<BigInteger, String, byte[], BigInteger, String>(
+                        return new Tuple6<BigInteger, String, byte[], BigInteger, String, Boolean>(
                                 (BigInteger) results.get(0).getValue(), 
                                 (String) results.get(1).getValue(), 
                                 (byte[]) results.get(2).getValue(), 
                                 (BigInteger) results.get(3).getValue(), 
-                                (String) results.get(4).getValue());
+                                (String) results.get(4).getValue(), 
+                                (Boolean) results.get(5).getValue());
                     }
                 });
     }
@@ -127,6 +134,14 @@ public class DiplomaRegistry extends Contract {
                 Arrays.<Type>asList(), 
                 Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>() {}));
         return executeRemoteCallSingleValueReturn(function, BigInteger.class);
+    }
+
+    public RemoteFunctionCall<TransactionReceipt> revokeDiploma(BigInteger id) {
+        final Function function = new Function(
+                FUNC_REVOKEDIPLOMA, 
+                Arrays.<Type>asList(new org.web3j.abi.datatypes.generated.Uint256(id)), 
+                Collections.<TypeReference<?>>emptyList());
+        return executeRemoteCallTransaction(function);
     }
 
     public RemoteFunctionCall<Boolean> verifyDiploma(BigInteger id, byte[] documentHash) {
@@ -171,6 +186,38 @@ public class DiplomaRegistry extends Contract {
         EthFilter filter = new EthFilter(startBlock, endBlock, getContractAddress());
         filter.addSingleTopic(EventEncoder.encode(DIPLOMAISSUED_EVENT));
         return diplomaIssuedEventFlowable(filter);
+    }
+
+    public static List<DiplomaRevokedEventResponse> getDiplomaRevokedEvents(
+            TransactionReceipt transactionReceipt) {
+        List<Contract.EventValuesWithLog> valueList = staticExtractEventParametersWithLog(DIPLOMAREVOKED_EVENT, transactionReceipt);
+        ArrayList<DiplomaRevokedEventResponse> responses = new ArrayList<DiplomaRevokedEventResponse>(valueList.size());
+        for (Contract.EventValuesWithLog eventValues : valueList) {
+            DiplomaRevokedEventResponse typedResponse = new DiplomaRevokedEventResponse();
+            typedResponse.log = eventValues.getLog();
+            typedResponse.id = (BigInteger) eventValues.getIndexedValues().get(0).getValue();
+            responses.add(typedResponse);
+        }
+        return responses;
+    }
+
+    public static DiplomaRevokedEventResponse getDiplomaRevokedEventFromLog(Log log) {
+        Contract.EventValuesWithLog eventValues = staticExtractEventParametersWithLog(DIPLOMAREVOKED_EVENT, log);
+        DiplomaRevokedEventResponse typedResponse = new DiplomaRevokedEventResponse();
+        typedResponse.log = log;
+        typedResponse.id = (BigInteger) eventValues.getIndexedValues().get(0).getValue();
+        return typedResponse;
+    }
+
+    public Flowable<DiplomaRevokedEventResponse> diplomaRevokedEventFlowable(EthFilter filter) {
+        return web3j.ethLogFlowable(filter).map(log -> getDiplomaRevokedEventFromLog(log));
+    }
+
+    public Flowable<DiplomaRevokedEventResponse> diplomaRevokedEventFlowable(
+            DefaultBlockParameter startBlock, DefaultBlockParameter endBlock) {
+        EthFilter filter = new EthFilter(startBlock, endBlock, getContractAddress());
+        filter.addSingleTopic(EventEncoder.encode(DIPLOMAREVOKED_EVENT));
+        return diplomaRevokedEventFlowable(filter);
     }
 
     @Deprecated
@@ -241,5 +288,9 @@ public class DiplomaRegistry extends Contract {
         public String student;
 
         public byte[] documentHash;
+    }
+
+    public static class DiplomaRevokedEventResponse extends BaseEventResponse {
+        public BigInteger id;
     }
 }
