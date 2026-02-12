@@ -32,4 +32,14 @@ public class UserController {
     public List<User> getAllUsers() {
         return service.getAllUsers();
     }
+
+    @PostMapping("/auth/login")
+    public UserRole login(@RequestParam String email , @RequestParam String password) {
+        return service.getUserRole(email, password);
+    }
+
+    @DeleteMapping("/delete")
+    public void deleteUser(@RequestParam String email) {
+        service.deleteUser(email);
+    }
 }
